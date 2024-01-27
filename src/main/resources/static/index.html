@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Scanner</title>
+    <style>
+         body {
+         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+         margin: 0;
+         padding: 0;
+         height: 100%;
+         display: flex;
+         flex-direction: column;
+         }
+         header {
+         background-color: #24292e;
+         color: #fff;
+         padding: 1rem;
+         text-align: center;
+         }
+         h1 {
+         font-size: 2rem;
+         margin: 0;
+         text-align: center;
+         }
+         form {
+         display: flex;
+         flex-direction: column;
+         justify-content: space-between;
+         margin: 1rem auto 0;
+         width: 90%;
+         max-width: 800px;
+         height: auto;
+         padding: 1rem;
+         }
+         .container {
+         width: 90%;
+         overflow-x: auto;
+         max-width: 1200px;
+         margin: 0 auto;
+         margin-bottom: 1rem;
+         }
+         table {
+         max-width: 90%;
+         width: 100%;
+         margin: 0 auto;
+         margin-bottom: 1rem;
+         border-collapse: collapse;
+         }
+         table th,
+         table td {
+         padding: 0.5rem;
+         border: 1px solid #ccc;
+         }
+         .container .visible {
+         display: table;
+         }
+         label {
+         display: block;
+         font-size: 1.5rem;
+         font-weight: bold;
+         text-align: left;
+         padding: 1rem;
+         }
+         button {
+         background-color: #24292e;
+         border: none;
+         border-radius: 4px;
+         color: #fff;
+         cursor: pointer;
+         font-size: 1.2rem;
+         padding: 0.5rem 1rem;
+         width: 100px;
+         margin: 0 auto;
+         margin-top: 1rem;
+         }
+         #loading {
+         display: none;
+         text-align: center;
+         }
+         textarea {
+         border: 1px solid #ccc;
+         border-radius: 4px;
+         font-size: 1.2rem;
+         padding: 1rem;
+         resize: vertical;
+         max-width: 90%;
+         width: 100%;
+         text-align: left;
+         }
+         textarea::placeholder {
+         color: #999;
+         font-size: 1rem;
+         font-style: italic;
+         padding: 0.5rem;
+         margin: 0.5rem 0;
+         line-height: 1.5;
+         text-align: left;
+         white-space: pre-line; /* allows the placeholders to be displayed on multiple lines */
+         }
+         /* Set the viewport width to the device width */
+         @viewport {
+         width: device-width;
+         }
+      </style>
+</head>
+<body>
+<header>
+    <h1>GitHub Scanner</h1>
+</header>
+<form onsubmit="fetchGitHubData(); return false;">
+    <label for="usernames">Usernames:</label>
+    <textarea id="usernames" name="usernames" placeholder="Enter each username / GitHub URL on a new line:
+            noamgivaty
+            https://github.com/NoamGivaty" rows="5" wrap="soft" style="white-space: pre-wrap;"></textarea>
+    <label for="keywords">Keywords:</label>
+    <textarea id="keywords" name="keywords" placeholder="Enter each keyword on a new line:
+            kafka
+            redis" rows="5" wrap="soft" style="white-space: pre-wrap;"></textarea>
+    <div style="display: flex; gap: 1rem; margin-top: 1rem; width: 100%;">
+        <button type="submit" style="width: 35%; max-width: 150px;">Scan</button>
+        <button type="button" id="downloadButton" onclick="downloadCSV(csvString)" style="width: 35%; max-width: 150px; display: none;">Download</button>
+    </div>
+</form>
+<div class="container">
+    <table id="csvTable">
+        <thead>
+        <tr>
+            <!-- Table headers will be dynamically generated from the CSV data -->
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Table rows will be dynamically generated from the CSV data -->
+        </tbody>
+    </table>
+</div>
+<div id="loading">
+    <img src="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" alt="loading clock" width="100px">
+</div>
+<script>
+         function fetchGitHubData() {
+         const usernames = document.getElementById("usernames").value;
+         const keywords = document.getElementById("keywords").value;
+         const xhr = new XMLHttpRequest();
+         document.getElementById("loading").style.display = "block";
+
+         const table = document.getElementById('csvTable');
+         table.style.display = 'none'; // Hide the table
+         const downloadButton = document.getElementById('downloadButton');
+         downloadButton.style.display = 'none'; // Hide the Download button
+
+         xhr.onreadystatechange = function() {
+         if (xhr.readyState === 4) {
+           if (xhr.status === 200) {
+             // Start polling the server for the result every second
+             const intervalId = setInterval(() => {
+               const xhr2 = new XMLHttpRequest();
+               xhr2.onreadystatechange = function() {
+                 if (xhr2.readyState === 4 && xhr2.status === 200) {
+                   clearInterval(intervalId); // Stop polling
+                   document.getElementById("loading").style.display = "none";
+                   showCSV(xhr2.responseText);
+                 }
+               };
+               xhr2.open("GET", `/collectGitHubDataResult?token=${xhr.responseText}`, true);
+               xhr2.send();
+             }, 1000);
+           } else {
+             console.error('Failed to fetch data from server');
+           }
+         }
+         };
+         xhr.open("POST", "/collectGitHubData", true);
+         xhr.setRequestHeader("Content-type", "application/json");
+         xhr.send(JSON.stringify({ usernames: usernames.split('\n'), keywords: keywords.split('\n') }));
+         }
+
+
+         function downloadCSV(csvString) {
+         const currentDate = new Date();
+         const day = currentDate.getDate().toString().padStart(2, '0');
+         const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+         const year = currentDate.getFullYear();
+         const hours = currentDate.getHours().toString().padStart(2, '0');
+         const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+         const formattedDate = `${day}/${month}/${year}`;
+         const formattedTime = `${hours}:${minutes}`;
+         const fileName = `githubdata_${formattedDate}_${formattedTime}.csv`;
+
+         const link = document.createElement('a');
+         link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvString));
+         link.setAttribute('download', fileName);
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+         }
+
+         function showCSV(csvString) {
+         const rows = csvString.trim().split('\n');
+         const table = document.getElementById('csvTable');
+
+         // Clear existing table content
+         while (table.tBodies[0].firstChild) {
+             table.tBodies[0].removeChild(table.tBodies[0].firstChild);
+         }
+
+         // Generate table headers only if there is no existing header row
+         if (!table.tHead.rows.length) {
+             const headers = rows.shift().split(',');
+             const headerRow = document.createElement('tr');
+             headers.forEach((header) => {
+                 const th = document.createElement('th');
+                 th.textContent = header;
+                 headerRow.appendChild(th);
+             });
+             table.tHead.appendChild(headerRow);
+         }
+
+         // Generate table rows
+         rows.forEach((rowString) => {
+             const row = document.createElement('tr');
+             const rowData = rowString.split(',');
+             rowData.forEach((cellData) => {
+                 const cell = document.createElement('td');
+                 cell.textContent = cellData;
+                 row.appendChild(cell);
+             });
+             table.tBodies[0].appendChild(row);
+         });
+
+         // Add a class to the table
+         table.classList.add('visible');
+
+         // Show the table
+         table.style.display = 'table';
+
+         // Show the Download button
+         const downloadButton = document.getElementById('downloadButton');
+         downloadButton.style.display = 'block';
+
+         downloadButton.onclick = function() {
+             downloadCSV(csvString);
+         };
+         }
+
+      </script>
+</body>
+</html>

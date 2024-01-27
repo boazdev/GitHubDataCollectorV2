@@ -1,0 +1,10 @@
+version: '2'
+services:
+  collector:
+    image: artofterran135/githubcollector
+    ports:
+      - "8080:8080"
+
+
+
+

@@ -1,0 +1,13 @@
+spring.datasource.url=jdbc:postgresql://www.example.com
+
+spring.datasource.username=postgres
+
+spring.datasource.password=password12345!
+
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.show-sql = true
+
+spring.jpa.hibernate.ddl-auto = update
+
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
