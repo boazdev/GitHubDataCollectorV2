@@ -1,4 +1,4 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
 
 import com.fasterxml.jackson.databind.JsonNode;

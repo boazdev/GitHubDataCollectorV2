@@ -1,11 +1,11 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.GitHubDataCollector.model.User;
+import com.GitHubDataCollectorV2.model.User;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

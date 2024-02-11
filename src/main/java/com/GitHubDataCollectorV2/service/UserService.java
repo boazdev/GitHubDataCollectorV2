@@ -1,7 +1,7 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
-import com.GitHubDataCollector.model.User;
-import com.GitHubDataCollector.repo.UserRepository;
+import com.GitHubDataCollectorV2.model.User;
+import com.GitHubDataCollectorV2.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

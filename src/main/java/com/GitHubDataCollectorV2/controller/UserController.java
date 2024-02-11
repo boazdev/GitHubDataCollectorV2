@@ -1,7 +1,7 @@
-package com.GitHubDataCollector.controller;
+package com.GitHubDataCollectorV2.controller;
 
-import com.GitHubDataCollector.model.User;
-import com.GitHubDataCollector.service.UserService;
+import com.GitHubDataCollectorV2.model.User;
+import com.GitHubDataCollectorV2.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

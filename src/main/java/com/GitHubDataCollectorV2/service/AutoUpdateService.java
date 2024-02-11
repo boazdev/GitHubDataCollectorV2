@@ -1,14 +1,13 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
-import com.GitHubDataCollector.model.User;
-import com.GitHubDataCollector.util.Dates;
+import com.GitHubDataCollectorV2.model.User;
+import com.GitHubDataCollectorV2.util.Dates;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Duration;

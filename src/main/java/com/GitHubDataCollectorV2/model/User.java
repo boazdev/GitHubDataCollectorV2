@@ -1,9 +1,6 @@
-package com.GitHubDataCollector.model;
+package com.GitHubDataCollectorV2.model;
 
-import com.GitHubDataCollector.util.Dates;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.LocalDateTime;
+import com.GitHubDataCollectorV2.util.Dates;
 import org.json.JSONObject;
 
 import javax.persistence.*;

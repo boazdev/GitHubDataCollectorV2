@@ -1,4 +1,4 @@
-package com.GitHubDataCollector.config;
+package com.GitHubDataCollectorV2.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;

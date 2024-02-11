@@ -1,4 +1,4 @@
-package com.GitHubDataCollector.util;
+package com.GitHubDataCollectorV2.util;
 
 import org.joda.time.*;
 import org.springframework.lang.Nullable;

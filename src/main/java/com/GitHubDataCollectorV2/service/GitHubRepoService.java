@@ -1,10 +1,10 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.GitHubDataCollector.constants.ConstantJsonKeys;
-import com.GitHubDataCollector.constants.ConstantsGit;
+import com.GitHubDataCollectorV2.constants.ConstantJsonKeys;
+import com.GitHubDataCollectorV2.constants.ConstantsGit;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.GitHubDataCollector.constants.ConstantJsonKeys.EXTENSIONS;
+import static com.GitHubDataCollectorV2.constants.ConstantJsonKeys.EXTENSIONS;
 
 
 @Service

@@ -1,4 +1,4 @@
-package com.GitHubDataCollector.constants;
+package com.GitHubDataCollectorV2.constants;
 
 public class ConstantsGit {
     public static Integer MAX_CLONE_RETRY = 10;

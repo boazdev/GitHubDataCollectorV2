@@ -1,13 +1,10 @@
-package com.GitHubDataCollector;
+package com.GitHubDataCollectorV2;
 
-import com.GitHubDataCollector.service.AutoUpdateService;
-import com.GitHubDataCollector.service.GitHubService;
+import com.GitHubDataCollectorV2.service.AutoUpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

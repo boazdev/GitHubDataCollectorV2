@@ -1,4 +1,4 @@
-package com.GitHubDataCollector.constants;
+package com.GitHubDataCollectorV2.constants;
 
 public class ConstantJsonKeys {
     public final static String emptyReposKey ="EmptyRepos";

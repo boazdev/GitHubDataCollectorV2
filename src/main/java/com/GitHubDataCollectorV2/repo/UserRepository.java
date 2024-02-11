@@ -1,6 +1,6 @@
-package com.GitHubDataCollector.repo;
+package com.GitHubDataCollectorV2.repo;
 
-import com.GitHubDataCollector.model.User;
+import com.GitHubDataCollectorV2.model.User;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;

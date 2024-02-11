@@ -1,13 +1,12 @@
-package com.GitHubDataCollector.service;
+package com.GitHubDataCollectorV2.service;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.GitHubDataCollector.constants.ConstantsGit;
+import com.GitHubDataCollectorV2.constants.ConstantsGit;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.GitHubDataCollector.service.GitHubHtmlRepoService.isEmptyPatternHtmlPage;
+import static com.GitHubDataCollectorV2.service.GitHubHtmlRepoService.isEmptyPatternHtmlPage;
 ;
 
 @Service
