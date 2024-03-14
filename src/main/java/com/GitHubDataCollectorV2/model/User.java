@@ -26,6 +26,7 @@ public class User {
     private String username;
     private String url;
     private int publicRepos;
+    private Integer publicReposPercentile;
     private int forkedRepos;
     private int emptyRepos;
     private int followers;
@@ -59,8 +60,10 @@ public class User {
     private int rRepositories;
     private int forks;
     private int commits;
+    private Integer commitsPercentile;
     private int stars;
     private int codeLines;
+    private Integer codeLinesPercentile;
     private int tests;
     private String keywords;
 
@@ -107,6 +110,9 @@ public class User {
         user.setCodeLines(codeLines);
         user.setTests(tests);
         user.setKeywords(keywords);
+        user.setCommitsPercentile(commitsPercentile);
+        user.setPublicReposPercentile(publicReposPercentile);
+        user.setCodeLinesPercentile(codeLinesPercentile);
     }
 
     public User JSONObjectToUser(JSONObject obj){
@@ -152,6 +158,9 @@ public class User {
         user.setCodeLines(obj.getInt("code_lines"));
         user.setTests(obj.getInt("tests"));
         user.setKeywords(obj.getString("keywords"));
+        user.setCommitsPercentile(obj.has("commits_percentile") ?  obj.getInt("commits_percentile") : 0);
+        user.setPublicReposPercentile(obj.has("public_repos_percentile") ? obj.getInt("public_repos_percentile") : 0);
+        user.setCodeLinesPercentile(obj.has("code_lines_percentile") ? obj.getInt("code_lines_percentile") : 0);
 
         return user;
     }
@@ -351,6 +360,31 @@ public class User {
     public void setKeywords(String keywords) {
         this.keywords = keywords;
     }
+
+    public int getPublicReposPercentile() {
+        return publicReposPercentile;
+    }
+
+    public void setPublicReposPercentile(Integer publicReposPercentile) {
+        this.publicReposPercentile = publicReposPercentile;
+    }
+
+    public int getCommitsPercentile() {
+        return commitsPercentile;
+    }
+
+    public void setCommitsPercentile(Integer commitsPercentile) {
+        this.commitsPercentile = commitsPercentile;
+    }
+
+    public int getCodeLinesPercentile() {
+        return codeLinesPercentile;
+    }
+
+    public void setCodeLinesPercentile(Integer codeLinesPercentile) {
+        this.codeLinesPercentile = codeLinesPercentile;
+    }
+
 
     public String getName() {
         return name;

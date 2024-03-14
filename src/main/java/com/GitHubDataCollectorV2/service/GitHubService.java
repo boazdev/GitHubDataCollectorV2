@@ -1,10 +1,12 @@
 package com.GitHubDataCollectorV2.service;
 
+import com.GitHubDataCollectorV2.repo.UserRepository;
 import org.apache.commons.io.FileUtils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
 import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.*;
@@ -34,6 +36,9 @@ public class GitHubService {
     public static final Pattern EMPTY_PATTERN = Pattern.compile("This repository is ([^.]+)");
     public static final Pattern USER_NOT_FOUND_PATTERN = Pattern.compile("Not ([^ ]+)");
     public static final int NUMBER_OF_THREADS = 20;
+
+    @Autowired
+    UserRepository userRepository;
 
     private static OkHttpClient client = new OkHttpClient.Builder()
             .callTimeout(Duration.ofSeconds(60))
@@ -66,56 +71,58 @@ public class GitHubService {
         executorService.awaitTermination(1000000, TimeUnit.HOURS);
 
         System.out.println();
-        System.out.println("Succeed to get " +count + " users info from " + users.size() + " users");
+        System.out.println("Succeed to get " + count + " users info from " + users.size() + " users");
 
         return jsonArray.toString();
     }
+
     public String getUserInfo(String username, List<String> keywords) throws IOException, InterruptedException {
 
         JsonNodeFactory factory = JsonNodeFactory.instance;
         ObjectNode objectNode = factory.objectNode();
 
         objectNode.setAll(rawData(username));
-        if(objectNode.get("UserNotFoundError")!=null)
+        if (objectNode.get("UserNotFoundError") != null)
             return objectNode.toString();
-        objectNode.setAll(programmingLanguageUsed(username,objectNode.get("public_repos").asText()));
+        objectNode.setAll(programmingLanguageUsed(username, objectNode.get("public_repos").asText()));
         objectNode.setAll(repositoriesData(username, keywords, objectNode.get("public_repos").asText()));
-
-        return  objectNode.toString();
+        setPercentiles(objectNode);
+        return objectNode.toString();
     } //main method
 
     //----data-collectors------------
-    public static ObjectNode rawData (String username) throws IOException, InterruptedException {
+    public static ObjectNode rawData(String username) throws IOException, InterruptedException {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         ObjectNode objectNode = factory.objectNode();
-        String html = getRepositoriesPageHtml(username,1);
+        String html = getRepositoriesPageHtml(username, 1);
 
-        if(getRegexGroup(USER_NOT_FOUND_PATTERN,html,"",username).equals("Found")){
-            objectNode.put("name","User not found");
-            objectNode.put("UserNotFoundError",true);
+        if (getRegexGroup(USER_NOT_FOUND_PATTERN, html, "", username).equals("Found")) {
+            objectNode.put("name", "User not found");
+            objectNode.put("UserNotFoundError", true);
             return objectNode;
         }
 
 
-        String name = getRegexGroup(NAME_PATTERN,html, "Name", username);
+        String name = getRegexGroup(NAME_PATTERN, html, "Name", username);
         if (name.equals("</span>")) name = "N/A";
-        objectNode.put("name",name);
-        objectNode.put("username",username);
-        objectNode.put("url","https://github.com/" + username);
-        objectNode.put("public_repos",getRegexGroup(NUM_OF_REPOSITORIES_PATTERN,html, "Number of Repositories", username));
-        objectNode.put("followers",getRegexGroup(FOLLOWERS_PATTERN,html, "Followers", username));
-        objectNode.put("following",getRegexGroup(FOLLOWING_PATTERN,html , "Following", username));
+        objectNode.put("name", name);
+        objectNode.put("username", username);
+        objectNode.put("url", "https://github.com/" + username);
+        objectNode.put("public_repos", getRegexGroup(NUM_OF_REPOSITORIES_PATTERN, html, "Number of Repositories", username));
+        objectNode.put("followers", getRegexGroup(FOLLOWERS_PATTERN, html, "Followers", username));
+        objectNode.put("following", getRegexGroup(FOLLOWING_PATTERN, html, "Following", username));
 
         System.out.println(username + " | Succeed getting user raw data");
 
         return objectNode;
     } //"dry" data from the user
+
     public static ObjectNode repositoriesData(String username, List<String> keywords, String NumOfPublicRepos) throws IOException, InterruptedException {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         ObjectNode objectNode = factory.objectNode();
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         List<Thread> threads = new ArrayList<>();
-        List<String> allRepositories = getAllRepositories(username,NumOfPublicRepos);
+        List<String> allRepositories = getAllRepositories(username, NumOfPublicRepos);
         List<String> validRepositories = new ArrayList<>();
 
         AtomicInteger forks = new AtomicInteger(0);
@@ -124,7 +131,7 @@ public class GitHubService {
         AtomicInteger emptyRepositories = new AtomicInteger(0);
         AtomicInteger forkedRepositories = new AtomicInteger(0);
 
-        for(String URL : allRepositories){
+        for (String URL : allRepositories) {
             Thread thread = new Thread(() -> {
                 boolean isEmpty;
                 boolean isForked;
@@ -142,12 +149,12 @@ public class GitHubService {
                     emptyRepositories.incrementAndGet();
                 else if (isForked)
                     forkedRepositories.incrementAndGet();
-                else{
+                else {
                     validRepositories.add(URL);
                     try {
-                        forks.addAndGet(Integer.parseInt(getRegexGroup(FORKS_PATTERN1,html,URL,username)));
+                        forks.addAndGet(Integer.parseInt(getRegexGroup(FORKS_PATTERN1, html, URL, username)));
                         //commits.addAndGet(0);//.addAndGet(Integer.parseInt(getRegexGroup(COMMITS_PATTERN, html,URL,username)));
-                        stars.addAndGet(Integer.parseInt(getRegexGroup(STARS_PATTERN1, html,URL,username)));
+                        stars.addAndGet(Integer.parseInt(getRegexGroup(STARS_PATTERN1, html, URL, username)));
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -157,7 +164,7 @@ public class GitHubService {
             executorService.execute(thread);
         }
         executorService.shutdown();
-        executorService.awaitTermination(10000,TimeUnit.HOURS);
+        executorService.awaitTermination(10000, TimeUnit.HOURS);
 
         objectNode.put("forks", forks.get());
         //objectNode.put("commits", commits.get());
@@ -167,19 +174,19 @@ public class GitHubService {
 
         System.out.println(
                 username +
-                " | Total repositories: " + allRepositories.size() +
-                " | Valid: " + validRepositories.size() +
-                " | Empty: " + emptyRepositories.get() +
-                " | Forked: " + forkedRepositories.get());
+                        " | Total repositories: " + allRepositories.size() +
+                        " | Valid: " + validRepositories.size() +
+                        " | Empty: " + emptyRepositories.get() +
+                        " | Forked: " + forkedRepositories.get());
 
         System.out.println(username + " | Succeed scraping repositories");
 
         String path = "data/" + username + "Repositories" + generateRandomString();
-        cloneRepositories(validRepositories,username, path); //Cloning repositories
+        cloneRepositories(validRepositories, username, path); //Cloning repositories
 
         objectNode.setAll(getFilesData(keywords, path));
-        Integer numCommits = getNumCommitsFromGitFolders(validRepositories,path);
-        System.out.println(String.format("number of commits for the user %s: %s",username,numCommits));
+        Integer numCommits = getNumCommitsFromGitFolders(validRepositories, path);
+        System.out.println(String.format("number of commits for the user %s: %s", username, numCommits));
         deleteRepositoriesFolder(path); //Deleting cloned repositories
         objectNode.put("commits", numCommits);
         return objectNode;
@@ -195,7 +202,7 @@ public class GitHubService {
             }
         }));
         executorService.shutdown();
-        executorService.awaitTermination(1000,TimeUnit.HOURS);
+        executorService.awaitTermination(1000, TimeUnit.HOURS);
 
         return commitsCount.intValue();
     }
@@ -216,12 +223,12 @@ public class GitHubService {
                 scala = 0, php = 0, r = 0, scss = 0, assembly = 0, pawn = 0;
 
 
-        for(int i=1 ; numOfRepositoriesPages > 0 ; i++, numOfRepositoriesPages--){
-            String html = getRepositoriesPageHtml(username,i);
+        for (int i = 1; numOfRepositoriesPages > 0; i++, numOfRepositoriesPages--) {
+            String html = getRepositoriesPageHtml(username, i);
             Matcher matcher = PROGRAMMING_LANGUAGE_PATTERN.matcher(html);
 
-            while(matcher.find()){
-                switch (matcher.group(1)){
+            while (matcher.find()) {
+                switch (matcher.group(1)) {
                     case "SCSS":
                         scss++;
                         break;
@@ -361,7 +368,7 @@ public class GitHubService {
                 processBuilder.directory(repositoriesFolder);
                 ////////######FIX
                 boolean isCloned = false;
-                for(int i = 0 ; i < 3 && !isCloned ; i++) {
+                for (int i = 0; i < 3 && !isCloned; i++) {
                     try {
                         Map<String, String> environment = processBuilder.environment();
                         environment.put("GIT_LFS_SKIP_SMUDGE", "1");
@@ -375,7 +382,7 @@ public class GitHubService {
                         throw new RuntimeException(e);
                     }
                 }
-                if(!isCloned){
+                if (!isCloned) {
                     System.err.println(username + " | Failed to clone repository | " + repositoryUrl);
                     failed.getAndIncrement();
                 }
@@ -383,14 +390,15 @@ public class GitHubService {
         }
 
         executorService.shutdown();
-        executorService.awaitTermination(1000,TimeUnit.HOURS);
+        executorService.awaitTermination(1000, TimeUnit.HOURS);
         System.out.println(username + " | Finish cloning repositories | Succeed: " + succeed + " | Failed: " + failed);
     }
+
     public static ObjectNode getFilesData(List<String> keys, String path) throws IOException {
         List<String> importantKeywords = importantKeywords();
         List<String> keywords = new ArrayList<>();
         keywords.addAll(importantKeywords);
-        if(keys!=null)
+        if (keys != null)
             keywords.addAll(keys);
 
         JsonNodeFactory factory = JsonNodeFactory.instance;
@@ -402,7 +410,7 @@ public class GitHubService {
         Path repositoriesFolder = Path.of(path);
         Files.walk(repositoriesFolder)
                 .filter(Files::isRegularFile)
-                .filter(x-> !(x.getFileName().toAbsolutePath().toString().contains(".git")))
+                .filter(x -> !(x.getFileName().toAbsolutePath().toString().contains(".git")))
                 .filter(file -> {
                     String fileName = file.getFileName().toString();
                     for (String extension : EXTENSIONS) {
@@ -445,27 +453,28 @@ public class GitHubService {
         Map<String, Integer> words = new HashMap<>();
 
         for (String keyword : keywordCount.keySet()) {
-            if(importantKeywords.contains(keyword))
+            if (importantKeywords.contains(keyword))
                 count += keywordCount.get(keyword);
             else
-                words.put(keyword,keywordCount.get(keyword));
+                words.put(keyword, keywordCount.get(keyword));
         }
 
-        objectNode.put("code_lines",totalLinesOfCode.toString());
-        objectNode.put("tests",count);
-        if(words.toString().contains("{="))
-            objectNode.put("keywords","-");
-        else{
+        objectNode.put("code_lines", totalLinesOfCode.toString());
+        objectNode.put("tests", count);
+        if (words.toString().contains("{="))
+            objectNode.put("keywords", "-");
+        else {
             String wordsString = words.toString();
-            wordsString = wordsString.replace("{","");
-            wordsString = wordsString.replace("}","");
-            wordsString = wordsString.replace(","," ");
-            objectNode.put("keywords",wordsString);
+            wordsString = wordsString.replace("{", "");
+            wordsString = wordsString.replace("}", "");
+            wordsString = wordsString.replace(",", " ");
+            objectNode.put("keywords", wordsString);
         }
 
         return objectNode;
     }
-    public static List<String> importantKeywords(){
+
+    public static List<String> importantKeywords() {
         List<String> keywords = new ArrayList<>();
         keywords.add("@Test"); //Java
         keywords.add("@def test_"); //Python
@@ -478,7 +487,8 @@ public class GitHubService {
 
         return keywords;
     }
-    public static void deleteRepositoriesFolder(String path){
+
+    public static void deleteRepositoriesFolder(String path) {
         File repositoriesFolder = new File(path);
         System.out.println("deleting repositories folder");
         try {
@@ -487,22 +497,24 @@ public class GitHubService {
             System.err.println("Failed to delete directory: " + repositoriesFolder);
         }
     }
+
     //----different------------
     public static List<String> getAllRepositories(String username, String NumOfPublicRepos) throws IOException {
         float numOfRepositoriesPages = Float.parseFloat(NumOfPublicRepos) / 30;
         List<String> repositoryUrls = new ArrayList<>();
 
-        for(int i=1 ; numOfRepositoriesPages > 0 ; i++, numOfRepositoriesPages--){
-            String html = getRepositoriesPageHtml(username,i);
+        for (int i = 1; numOfRepositoriesPages > 0; i++, numOfRepositoriesPages--) {
+            String html = getRepositoriesPageHtml(username, i);
             Matcher matcher = REPOSITORIES_PATTERN.matcher(html);
 
-            while(matcher.find()){
+            while (matcher.find()) {
                 repositoryUrls.add("https://github.com/" + username + "/" + matcher.group(1) + ".git");
             }
         }
 
         return repositoryUrls;
     }
+
     //----html/regex-requests------------
     public static String getRegexGroup(Pattern pattern, String html, String source, String username) throws InterruptedException {
         Random random = new Random();
@@ -530,10 +542,12 @@ public class GitHubService {
         }
         return "0";
     }
+
     public static String convertToNumber(String str) {
         double num = Double.parseDouble(str.substring(0, str.length() - 1));
         return String.valueOf((int) (num * 1000));
     }
+
     public static String getPageHtml(String url) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
@@ -543,15 +557,17 @@ public class GitHubService {
         Response response = client.newCall(request).execute();
         return response.body().string();
     }
+
     public static String getRepositoriesPageHtml(String username, int pageNumber) throws IOException {
         Request request = new Request.Builder()
-                .url("https://github.com/" + username + "?page=" + pageNumber +"&tab=repositories")
+                .url("https://github.com/" + username + "?page=" + pageNumber + "&tab=repositories")
                 .method("GET", null)
                 .build();
 
         Response response = client.newCall(request).execute();
         return response.body().string();
     }
+
     public static String generateRandomString() {
         final int LENGTH = 5;
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -564,8 +580,8 @@ public class GitHubService {
         return sb.toString();
     }
 
-    public static Integer getNumCommitsFromGitClone(String path, String repositoryName)  {
-        File clonedRepoDir = new File(path,repositoryName);
+    public static Integer getNumCommitsFromGitClone(String path, String repositoryName) {
+        File clonedRepoDir = new File(path, repositoryName);
         //System.out.println(String.format("count commits count in folder %s using git cmd",clonedRepoDir.getAbsolutePath()));
         String[] revListCommand = {"git", "rev-list", "--all", "--count"};
         ProcessBuilder revListProcessBuilder = new ProcessBuilder(revListCommand);
@@ -588,13 +604,45 @@ public class GitHubService {
                 }
                 System.out.println("error from git: " + revListProcess.getErrorStream().toString());
             }
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             System.out.println("Exception: " + ex.toString());
             ex.printStackTrace();
         }
 
 
         return 0;
+    }
+
+    private void setPercentiles(ObjectNode objectNode) {
+        Integer linesOfCode = i(objectNode.get("code_lines").asText());
+        Integer commits = i(objectNode.get("commits").asText());
+        Integer repositories = i(objectNode.get("public_repos").asText());
+        Integer linesOfCodePercentile = 0;
+        Integer commitsPercentile = 0;
+        Integer repositoriesPercentile = 0;
+        if (linesOfCode != 0) {
+            linesOfCodePercentile = userRepository.getLineOfCodePercentile(linesOfCode);
+            linesOfCodePercentile = 100 - (100 - linesOfCodePercentile) / 2;
+        }
+        if (commits != 0) {
+            commitsPercentile = userRepository.getCommitsPercentile(commits);
+            commitsPercentile = 100 - (100 - commitsPercentile) / 2;
+        }
+
+        if (repositories != 0) {
+            repositoriesPercentile = userRepository.getRepositoriesPercentile(repositories);
+            repositoriesPercentile = 100 - (100 - repositoriesPercentile) / 2;
+        }
+        objectNode.put("code_lines_percentile", linesOfCodePercentile);
+        objectNode.put("commits_percentile", commitsPercentile);
+        objectNode.put("public_repos_percentile", repositoriesPercentile);
+    }
+
+    public static Integer i(String codeLines) {
+        try {
+            return Integer.parseInt(codeLines);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

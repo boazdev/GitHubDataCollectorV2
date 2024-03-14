@@ -1,7 +1,8 @@
 version: '2'
 services:
   collector:
-    image: artofterran135/githubcollector:112
+    #image: artofterran135/githubcollector:112
+    image: artofterran135/githubcollector
     ports:
       - "8080:8080"
 

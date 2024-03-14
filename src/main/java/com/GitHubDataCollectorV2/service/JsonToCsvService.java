@@ -42,8 +42,11 @@ public class JsonToCsvService {
         List<User> users = jsonStringToUsersAndSave(jsonData);
 
         // Define headers for CSV
-        String[] headers = { "Name", "Username", "Url", "Followers", "Following", "Forks", "Commits", "Stars", "Code Lines", "Tests", "Keywords",
-                "Public Repos", "Forked Repositories", "Empty Repositories",
+        String[] headers = { "Name", "Username", "Url", "Followers", "Following", "Forks", "Commits",
+                "Stars", "Code Lines Percentile","Code Lines",
+                "Tests", "Keywords",
+                "Public Repos Percentile", "Public Repos",
+                "Forked Repositories", "Empty Repositories",
                 "Java Repositories", "EJS Repositories", "C# Repositories", "JavaScript Repositories", "Jupyter Notebook Repositories",
                 "C++ Repositories", "CSS Repositories", "Python Repositories", "Node.js Repositories", "Angular Repositories",
                 "React Repositories","HTML Repositories", "Kotlin Repositories","C Repositories","TypeScript Repositories",
@@ -51,8 +54,11 @@ public class JsonToCsvService {
                 "Ruby Repositories", "Scala Repositories", "PHP Repositories", "R Repositories", "SCSS Repositories",
                 "Assembly Repositories", "Pawn Repositories",
         };
-        String[] columnsMapping = {"name", "username", "url", "followers","following", "forks", "commits", "stars", "codeLines", "tests", "keywords",
-                "publicRepos", "forkedRepos", "emptyRepos",
+        String[] columnsMapping = {"name", "username", "url", "followers","following", "forks", "commits",
+                "stars","codeLinesPercentile", "codeLines",
+                "tests", "keywords",
+                "publicReposPercentile","publicRepos",
+                "forkedRepos", "emptyRepos",
                 "javaRepositories","ejsRepositories", "cSharpRepositories", "javaScriptRepositories", "jupyterRepositories", "cppRepositories",
                 "cssRepositories","pythonRepositories","nodeJsRepositories", "angularRepositories","reactRepositories","htmlRepositories","kotlinRepositories",
                 "cRepositories","typeScriptRepositories","dartRepositories", "objectiveCRepositories","swiftRepositories", "goRepositories", "rustRepositories",
